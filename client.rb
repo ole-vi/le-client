@@ -6,9 +6,9 @@ HTTParty::Basement.default_options.update(debug_output: $stdout)
 OpenSSL::PKey::EC.send(:alias_method, :private?, :private_key?)
 
 DIRECTORY_URI = 'https://acme-v01.api.letsencrypt.org/directory'.freeze
-domain, root_domain, email = 'le.example.com', 'example.com', 'me@example.com'
-preferred_challenge = 'http-01' # or 'dns-01',
-certificate_type = 'rsa' # or ecdsa
+domain, root_domain, email = ENV['LE_DOMAIN'], ENV['LE_ROOT_DOMAIN'], ENV['LE_EMAIL']
+preferred_challenge = ENV['LE_PREF_CHALLENGE'] # 'dns-01' or 'http-01' 'dns-01',
+certificate_type = ENV['LE_CERT_TYPE'] # 'rsa' or ecdsa
 
 def base64_le(data)
   txt_data = data.respond_to?(:entries) ? JSON.dump(data) : data
@@ -62,7 +62,7 @@ def thumbprint
 end
 
 def upload(local_path, remote_path)
-  server_ip = '162.243.201.152' # see Appendix 3
+  server_ip = ENV['LE_SERVER_IP'] # see Appendix 3
   Net::SCP.upload!(server_ip, 'root', local_path, remote_path)
 end
 
@@ -161,3 +161,4 @@ intermediate = OpenSSL::X509::Certificate.new HTTParty.get(certificate_response.
 
 IO.write(domain_filename + '-cert.pem', certificate.to_pem)
 IO.write(domain_filename + '-chained.pem', [certificate.to_pem, intermediate].join("\n"))
+
